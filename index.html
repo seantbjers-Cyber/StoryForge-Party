@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>StoryForge Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;min-height:100dvh;background:linear-gradient(160deg,#FADADE 0%,#FFF8FA 50%,#D0F0DE 100%);font-family:'Nunito',sans-serif;color:#2D1B4E;-webkit-tap-highlight-color:transparent}
+.upload-screen{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px}
+.upload-box{background:white;border-radius:24px;padding:48px 36px;max-width:460px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(147,110,212,.15);border:2px solid #F0B0BC}
+.upload-box h1{font-family:'Lora',Georgia,serif;color:#936ED4;font-size:26px;margin:0 0 8px}
+.upload-box p{color:#5C4480;font-size:15px;line-height:1.7;margin-bottom:28px}
+.upload-label{display:inline-block;background:linear-gradient(135deg,#936ED4,#A788E0);color:white;border-radius:14px;padding:16px 32px;font-size:17px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(147,110,212,.35)}
+.upload-label:active{transform:scale(.97)}
+.upload-label input{position:absolute;left:-9999px}
+.status-msg{margin-top:16px;font-size:14px;color:#5C4480;min-height:20px}
+.status-msg.error{color:#C53030}
+.topbar{background:white;border-bottom:2px solid #F0B0BC;padding:14px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.topbar-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.topbar h1{font-family:'Lora',Georgia,serif;color:#936ED4;font-size:17px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.topbar .meta{font-size:12px;color:#5C4480}
+.btn-group{display:flex;gap:8px}
+.btn-new{background:#EDE5F7;color:#936ED4;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-download{background:linear-gradient(135deg,#936ED4,#A788E0);color:white;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-new:active,.btn-download:active{transform:scale(.97)}
+.content{max-width:720px;margin:0 auto;padding:20px 14px 80px}
+.meta-card{background:white;border:2px solid #F0B0BC;border-radius:14px;padding:16px;margin-bottom:18px}
+.field-label{font-size:12px;font-weight:700;color:#5C4480;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.meta-input{width:100%;padding:10px 12px;border:2px solid #E8D5F0;border-radius:8px;font-size:16px;font-weight:700;font-family:'Lora',Georgia,serif;color:#2D1B4E;outline:none}
+.meta-input:focus{border-color:#936ED4}
+.meta-textarea{width:100%;padding:10px 12px;border:2px solid #E8D5F0;border-radius:8px;font-size:14px;font-family:'Lora',Georgia,serif;font-style:italic;color:#2D1B4E;resize:vertical;outline:none;line-height:1.7}
+.meta-textarea:focus{border-color:#936ED4}
+.search-input{width:100%;padding:12px 16px;border:2px solid #E8D5F0;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;color:#2D1B4E;outline:none;background:white;margin-bottom:14px}
+.search-input:focus{border-color:#936ED4}
+.passage-card{background:white;border:2px solid #E8D5F0;border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.passage-card.open{border-color:#936ED4}
+.passage-header{width:100%;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:transparent;border:none;cursor:pointer;font-family:'Nunito',sans-serif;-webkit-tap-highlight-color:transparent;text-align:left}
+.passage-card.open .passage-header{background:#EDE5F7}
+.tag{font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;font-family:monospace;color:white;display:inline-block}
+.tag-end{background:#F48BA9}
+.tag-branch{background:#936ED4}
+.tag-continue{background:#9FE2C5;color:#2D1B4E}
+.passage-id{font-weight:700;color:#2D1B4E;font-size:14px;font-family:monospace;margin-left:10px}
+.passage-stats{font-size:12px;color:#5C4480;margin-right:8px}
+.arrow{font-size:18px;color:#936ED4;transition:transform .2s;display:inline-block}
+.passage-card.open .arrow{transform:rotate(180deg)}
+.passage-body{padding:0 16px 16px;display:none}
+.passage-card.open .passage-body{display:block}
+.edit-hint{font-size:12px;color:#5C4480;font-style:italic;margin-bottom:8px}
+.passage-textarea{width:100%;min-height:180px;padding:14px;border:2px solid #E8D5F0;border-radius:10px;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.8;color:#2D1B4E;resize:vertical;outline:none}
+.passage-textarea:focus{border-color:#936ED4}
+.preview-label{font-size:12px;font-weight:700;color:#5C4480;text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px}
+.preview-box{background:#EDE5F7;border-radius:10px;padding:16px;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.85;color:#2D1B4E}
+.preview-box p{margin:0 0 14px}
+.preview-box p:last-child{margin:0}
+.leads-to{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.leads-tag{background:#D0F0DE;color:#2D1B4E;font-size:12px;padding:4px 10px;border-radius:8px;font-family:monospace}
+.no-results{text-align:center;padding:40px;color:#5C4480;font-size:15px}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+var originalHTML = null;
+var story = null;
+var filename = '';
+var openPassage = null;
+var searchText = '';
+var app = document.getElementById('app');
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function parseStory(html) {
+  // Strategy: let the BROWSER parse the JavaScript — it already knows how.
+  // Create a hidden iframe, inject only the variable declarations, read STORY.
+  try {
+    // Extract the script tag content
+    var scriptMatch = html.match(/<script[^>]*>([\s\S]*?)<\/script>/);
+    if (!scriptMatch) return {error: 'No <script> tag found in file'};
+    var script = scriptMatch[1];
+    
+    // Find where functions start — we only want variable declarations
+    var funcIdx = script.indexOf('function ');
+    var varSection = funcIdx > 0 ? script.substring(0, funcIdx) : script;
+    
+    // Create a hidden iframe to execute the JS safely
+    var iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write('<html><body><div id="app"></div><script>' + varSection + '<\/script></body></html>');
+    doc.close();
+    
+    var result = iframe.contentWindow.STORY;
+    document.body.removeChild(iframe);
+    
+    if (result && result.passages) {
+      return result;
+    }
+    return {error: 'Script executed but STORY object not found or has no passages'};
+  } catch(e) {
+    return {error: 'Iframe parse failed: ' + e.message};
+  }
+}
+
+function handleFile(input) {
+  var file = input.files && input.files[0];
+  if (!file) { showStatus('No file selected.', true); return; }
+  showStatus('Reading ' + file.name + ' (' + Math.round(file.size/1024) + ' KB)...');
+  filename = file.name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    originalHTML = e.target.result;
+    var len = originalHTML.length;
+    var hasMarker = originalHTML.indexOf('var STORY') >= 0;
+    var hasHero = originalHTML.indexOf('var HERO') >= 0;
+    
+    if (!hasMarker) {
+      showStatus('File loaded (' + len + ' chars) but "var STORY" not found. Wrong file?', true);
+      return;
+    }
+    
+    story = parseStory(originalHTML);
+    if (story && story.error) {
+      showStatus('Parse error: ' + story.error + (story.snippet ? ' | Start: ' + story.snippet : ''), true);
+      story = null;
+    } else if (story) {
+      renderEditor();
+    } else {
+      showStatus('File has "var STORY" but parsing returned null. File size: ' + len + ' chars.', true);
+    }
+  };
+  reader.onerror = function() { showStatus('Error reading file. Try again.', true); };
+  reader.readAsText(file);
+}
+
+function showStatus(msg, isError) {
+  var el = document.getElementById('status');
+  if (el) { el.textContent = msg; el.className = 'status-msg' + (isError ? ' error' : ''); }
+}
+
+function doDownload() {
+  if (!originalHTML || !story) return;
+  var json = JSON.stringify(story, null, 2);
+  // Find the STORY assignment and replace everything up to var HERO
+  var storyStart = originalHTML.indexOf('var STORY');
+  var heroStart = originalHTML.indexOf('var HERO');
+  if (storyStart < 0 || heroStart < 0) {
+    alert('Could not locate STORY/HERO markers in original file.');
+    return;
+  }
+  var updated = originalHTML.substring(0, storyStart) + 'var STORY = ' + json + ';\n\n' + originalHTML.substring(heroStart);
+  var blob = new Blob([updated], {type:'text/html'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename || 'story.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function doReset() {
+  originalHTML = null; story = null; filename = '';
+  openPassage = null; searchText = '';
+  renderUpload();
+}
+
+function togglePassage(id) {
+  openPassage = (openPassage === id) ? null : id;
+  renderPassageList();
+  if (openPassage) {
+    setTimeout(function(){
+      var el = document.getElementById('card-' + id);
+      if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 50);
+  }
+}
+
+function onTextEdit(id) {
+  var ta = document.getElementById('ta-' + id);
+  if (!ta) return;
+  story.passages[id].text = ta.value;
+  var prev = document.getElementById('preview-' + id);
+  if (prev) {
+    prev.innerHTML = ta.value.split('\n').map(function(p){
+      return '<p>' + (esc(p) || '&nbsp;') + '</p>';
+    }).join('');
+  }
+  var stats = document.getElementById('stats-' + id);
+  if (stats) {
+    var wc = ta.value.split(/\s+/).filter(function(w){return w}).length;
+    var bc = (ta.value.match(/\n/g)||[]).length;
+    stats.textContent = wc + 'w \u00b7 ' + bc + ' breaks';
+  }
+}
+
+function onTitleEdit() { var el = document.getElementById('ed-title'); if(el) story.title = el.value; }
+function onDedEdit() { var el = document.getElementById('ed-ded'); if(el) story.dedication = el.value; }
+function onSearch() { var el = document.getElementById('searchbox'); searchText = el ? el.value : ''; renderPassageList(); }
+
+function renderUpload() {
+  app.innerHTML =
+    '<div class="upload-screen"><div class="upload-box">' +
+    '<div style="font-size:52px;margin-bottom:16px">\u270f\ufe0f</div>' +
+    '<h1>StoryForge Editor</h1>' +
+    '<p>Upload a StoryForge story file to edit the text. Every passage shows up in a clean text box \u2014 just type your changes and download the updated file.</p>' +
+    '<label class="upload-label">Upload Story File<input type="file" accept=".html,.htm,text/html" onchange="handleFile(this)"></label>' +
+    '<div class="status-msg" id="status"></div>' +
+    '</div></div>';
+}
+
+function renderEditor() {
+  var ids = Object.keys(story.passages);
+  var endings = ids.filter(function(id){return story.passages[id].isEnding}).length;
+  var h = '';
+  h += '<div class="topbar"><div class="topbar-inner">';
+  h += '<div><h1>\u270f\ufe0f ' + esc(story.title) + '</h1>';
+  h += '<span class="meta">' + ids.length + ' passages \u00b7 ' + endings + ' endings \u00b7 ' + esc(filename) + '</span></div>';
+  h += '<div class="btn-group">';
+  h += '<button class="btn-new" onclick="doReset()">New File</button>';
+  h += '<button class="btn-download" onclick="doDownload()">\u2b07 Download</button>';
+  h += '</div></div></div>';
+  h += '<div class="content">';
+  h += '<div class="meta-card">';
+  h += '<div style="margin-bottom:14px"><div class="field-label">Story Title</div>';
+  h += '<input class="meta-input" id="ed-title" value="' + esc(story.title) + '" oninput="onTitleEdit()"></div>';
+  h += '<div><div class="field-label">Dedication</div>';
+  h += '<textarea class="meta-textarea" id="ed-ded" rows="2" oninput="onDedEdit()">' + esc(story.dedication) + '</textarea></div>';
+  h += '</div>';
+  h += '<input class="search-input" id="searchbox" placeholder="Search passages by name or text..." value="' + esc(searchText) + '" oninput="onSearch()">';
+  h += '<div id="plist"></div>';
+  h += '</div>';
+  app.innerHTML = h;
+  renderPassageList();
+}
+
+function renderPassageList() {
+  var container = document.getElementById('plist');
+  if (!container) return;
+  var ids = Object.keys(story.passages);
+  var s = searchText.toLowerCase();
+  var filtered = ids.filter(function(id) {
+    if (!s) return true;
+    return id.toLowerCase().indexOf(s) >= 0 || story.passages[id].text.toLowerCase().indexOf(s) >= 0;
+  });
+  if (!filtered.length) {
+    container.innerHTML = '<div class="no-results">No passages match \u201c' + esc(searchText) + '\u201d</div>';
+    return;
+  }
+  var h = '';
+  for (var i = 0; i < filtered.length; i++) {
+    var id = filtered[i];
+    var p = story.passages[id];
+    var isEnd = !!p.isEnding;
+    var ch = p.choices || [];
+    var isOpen = (openPassage === id);
+    var wc = p.text.split(/\s+/).filter(function(w){return w}).length;
+    var bc = (p.text.match(/\n/g)||[]).length;
+    var tc = isEnd ? 'tag tag-end' : (ch.length <= 1 ? 'tag tag-continue' : 'tag tag-branch');
+    var tt = isEnd ? 'END' : (ch.length <= 1 ? '\u2192' : ch.length + '\u00d7');
+    h += '<div class="passage-card' + (isOpen ? ' open' : '') + '" id="card-' + id + '">';
+    h += '<button class="passage-header" onclick="togglePassage(\'' + id + '\')">';
+    h += '<div style="display:flex;align-items:center"><span class="' + tc + '">' + tt + '</span>';
+    h += '<span class="passage-id">' + id + '</span></div>';
+    h += '<div style="display:flex;align-items:center;gap:10px">';
+    h += '<span class="passage-stats" id="stats-' + id + '">' + wc + 'w \u00b7 ' + bc + ' breaks</span>';
+    h += '<span class="arrow">\u25be</span></div>';
+    h += '</button>';
+    h += '<div class="passage-body">';
+    h += '<div class="edit-hint">New line = new paragraph. Break for each speaker, scene beat, and big moment.</div>';
+    h += '<textarea class="passage-textarea" id="ta-' + id + '" oninput="onTextEdit(\'' + id + '\')">' + esc(p.text) + '</textarea>';
+    h += '<div class="preview-label">Preview</div>';
+    h += '<div class="preview-box" id="preview-' + id + '">';
+    h += p.text.split('\n').map(function(para){ return '<p>' + (esc(para)||'&nbsp;') + '</p>'; }).join('');
+    h += '</div>';
+    if (ch.length > 0) {
+      h += '<div class="preview-label">Leads to</div><div class="leads-to">';
+      for (var j = 0; j < ch.length; j++) h += '<span class="leads-tag">' + esc(ch[j].next) + '</span>';
+      h += '</div>';
+    }
+    h += '</div></div>';
+  }
+  container.innerHTML = h;
+}
+
+renderUpload();
+</script>
+</body>
+</html>
